@@ -8,6 +8,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
+
+import java.util.concurrent.CompletableFuture;
 
 @SpringBootApplication
 public class KafkaServiceApplication implements CommandLineRunner {
@@ -27,7 +30,14 @@ public class KafkaServiceApplication implements CommandLineRunner {
 	}
 
     @Override
-    public void run(String... args) throws Exception {
-        kafkaTemplate.send("pinncode-topic", "Este es un nuevo mensahe");
+    public void run(String... args) {
+        CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send("pinncode-topic", "Este es un nuevo mensahe");
+        future.whenComplete((result, ex) -> {
+            if (ex == null) {
+                log.info("Sent message with offset=[{}] to partition [{}]", result.getRecordMetadata().offset(), result.getRecordMetadata().partition());
+            } else {
+                log.error("Unable to send message due to : {}", ex.getMessage());
+            }
+        });
     }
 }
