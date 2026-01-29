@@ -50,10 +50,11 @@ public class KafkaConfiguration {
      *
      * @return
      */
-    @Bean
+    @Bean(name = "listerContainerFactory")
     public ConcurrentKafkaListenerContainerFactory<String, String> listerContainerFactory () {
         ConcurrentKafkaListenerContainerFactory<String, String> listenerContainerFactory = new ConcurrentKafkaListenerContainerFactory<>();
         listenerContainerFactory.setConsumerFactory(consumerFactory());
+        listenerContainerFactory.setBatchListener(true);
         return listenerContainerFactory;
     }
 

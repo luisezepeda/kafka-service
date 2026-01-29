@@ -9,9 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.List;
 
 @SpringBootApplication
 public class KafkaServiceApplication implements CommandLineRunner {
@@ -21,9 +19,15 @@ public class KafkaServiceApplication implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaServiceApplication.class);
 
-    @KafkaListener(topics = "pinncode-topic", groupId = "pinncode-group")
-    public void listen (String message) {
-        log.info("Mensaje recibido :: {}", message);
+    @KafkaListener(topics = "pinncode-topic", containerFactory = "listerContainerFactory", groupId = "pinncode-group",
+    properties = {
+            "max.poll.interval.ms:4000", "max.poll.records:10"
+    })
+    public void listen (List<String> messages) {
+        for(String message : messages) {
+            log.info("Mensaje recibido :: {}", message);
+        }
+        log.info("Batch complete");
     }
 
 	public static void main(String[] args) {
@@ -31,7 +35,9 @@ public class KafkaServiceApplication implements CommandLineRunner {
 	}
 
     @Override
-    public void run(String... args) throws ExecutionException, InterruptedException, TimeoutException {
-        kafkaTemplate.send("pinncode-topic", "Este es un nuevo mensahe").get(10000, TimeUnit.MICROSECONDS);
+    public void run(String... args) {
+        for (int i = 0; i < 100; i++) {
+            kafkaTemplate.send("pinncode-topic", String.format("Este es un nuevo mensaje %d", i));
+        }
     }
 }
