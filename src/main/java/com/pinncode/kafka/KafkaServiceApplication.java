@@ -1,5 +1,6 @@
 package com.pinncode.kafka;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +24,9 @@ public class KafkaServiceApplication implements CommandLineRunner {
     properties = {
             "max.poll.interval.ms:4000", "max.poll.records:10"
     })
-    public void listen (List<String> messages) {
-        for(String message : messages) {
-            log.info("Mensaje recibido :: {}", message);
+    public void listen (List<ConsumerRecord<String, String>> messages) {
+        for(ConsumerRecord<String, String> message : messages) {
+            log.info("Partition = {}, Offset = {}, Key = {}, Value = {}", message.partition(), message.offset(), message.key(), message.value());
         }
         log.info("Batch complete");
     }
@@ -37,7 +38,7 @@ public class KafkaServiceApplication implements CommandLineRunner {
     @Override
     public void run(String... args) {
         for (int i = 0; i < 100; i++) {
-            kafkaTemplate.send("pinncode-topic", String.format("Este es un nuevo mensaje %d", i));
+            kafkaTemplate.send("pinncode-topic", String.valueOf(i), String.format("Este es un nuevo mensaje %d", i));
         }
     }
 }
