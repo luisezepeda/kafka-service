@@ -8,8 +8,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.List;
 
@@ -18,9 +18,6 @@ public class KafkaServiceApplication implements CommandLineRunner {
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
-
-    @Autowired
-    private KafkaListenerEndpointRegistry registry;
 
     private static final Logger log = LoggerFactory.getLogger(KafkaServiceApplication.class);
 
@@ -40,16 +37,15 @@ public class KafkaServiceApplication implements CommandLineRunner {
 		SpringApplication.run(KafkaServiceApplication.class, args);
 	}
 
+    @Scheduled(fixedDelay = 1000, initialDelay = 500)
+    public void print () {
+        log.info("Pinncode rocks");
+    }
+
     @Override
     public void run(String... args) throws InterruptedException {
         for (int i = 0; i < 100; i++) {
             kafkaTemplate.send("pinncode-topic", String.valueOf(i), String.format("Este es un nuevo mensaje %d", i));
         }
-        log.info("Esperando para iniciar");
-        Thread.sleep(5000);
-        log.info("Starting");
-        registry.getListenerContainer("pinncodeId").start();
-        Thread.sleep(5000);
-        registry.getListenerContainer("pinncodeId").stop();
     }
 }
