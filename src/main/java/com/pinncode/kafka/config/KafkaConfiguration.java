@@ -4,13 +4,11 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +18,9 @@ import java.util.Map;
  */
 @Configuration
 public class KafkaConfiguration {
+
+    @Autowired
+    private MetricConfiguration metricConfiguration;
 
     /**
      * Crea mapa con propiedades para conexión kafka.
@@ -77,6 +78,9 @@ public class KafkaConfiguration {
     @Bean
     public KafkaTemplate<String, String> createTemplate() {
         DefaultKafkaProducerFactory<String, String> producerFactory = new DefaultKafkaProducerFactory<>(producerProperties());
+
+        producerFactory.addListener(new MicrometerProducerListener<String, String>(metricConfiguration.meterRegistry()));
+
         KafkaTemplate kafkaTemplate = new KafkaTemplate<>(producerFactory);
         return kafkaTemplate;
     }
